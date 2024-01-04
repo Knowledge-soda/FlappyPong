@@ -492,12 +492,12 @@ void OdbijanjeLopticeOdReketa(Loptica l) {
       // ako je udaljenost središta loptice i središta reketa manja od pola veličine loptice i pomaka miša
       // tj. ako je došlo do sudara loptice i reketa 
       if (dist(l.lopticaX, l.lopticaY, l.lopticaX, mouseY) <= l.lopticaVelicina/2 + abs(pomakMisa)) {
-          OdbijOdDna(mouseY,l);       
+          OdbijOdDna(mouseY,l);
           // povećaj brzinu i položaj loptice u odnosu na jačinu udara
           if (pomakMisa < 0) {
             l.lopticaY += pomakMisa;
             l.lopticaBrzinaVert += pomakMisa;
-          }        
+          }
           //ide li loptica lijevo ili desno ovisi o točki reketa na koju je pala
           l.lopticaBrzinaHorizon = (l.lopticaX - mouseX)/10; // 1/10 vrijednosti najprirodnije
       }
@@ -545,7 +545,7 @@ void IzbrisiZid(int index) {
 }
 
 void SudaranjeSaZidom(int index,Loptica l) {
-  int[] zid = zidovi.get(index);  
+  int[] zid = zidovi.get(index);
   int sudar = zid[4];
   int gornjiZidX = zid[0];
   int gornjiZidY = 0;
