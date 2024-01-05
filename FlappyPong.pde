@@ -5,6 +5,7 @@ import ddf.minim.signals.*;
 import ddf.minim.spi.*;
 import ddf.minim.ugens.*;
 
+import com.jogamp.newt.opengl.GLWindow;
 
 /********* VARIJABLE *********/
 
@@ -12,7 +13,7 @@ import ddf.minim.ugens.*;
 // vrijednost varijable zaslon, vrijednosti su:
 //
 // 0: Početni zaslon
-// 1: Zaslon za igricu po uzoru na Flappy Bird 
+// 1: Zaslon za igricu po uzoru na Flappy Bird
 // 2: Kraj igrice
 // 3: Zaslon s instrukcijama
 // 4: Zaslon za igricu po uzoru na Brick Breaker
@@ -28,7 +29,7 @@ Loptica loptica2 = new Loptica(100,500);
 float gravitacija = 0.3;
 
 // otpor zraka i otpor podloga
-float otporZraka = 0.0001;
+float otporZraka = 0.00001;
 float otporPodlogeVert = 0.35;
 float otporPodlogeHoriz = 0.3;
 
@@ -52,7 +53,7 @@ ArrayList<int[]> zidovi = new ArrayList<int[]>();
 int maxZivot = 100;
 int zivot = 100;
 int sirinaLinijeZivota = 60;
-int rezultat = 0; 
+int rezultat = 0;
 
 // inicijalizacija niza ciglica, sirina i duzina jedne ciglice
 ArrayList<int[]> ciglice = new ArrayList<int[]>();
@@ -80,38 +81,29 @@ String korisnikIme = "", upisano = "";
 //zvukovi
 AudioPlayer pjesmica, loptica_zvuk, podogak_zvuk;
 Minim minim;
+boolean playable = true;
 
 //font
 PFont font;
 
-//slika 
+//slika
 PImage ptica;
 int x=0;
 float y=150;
 
-/********* KLASA LOPTICA *********/
-class Loptica { 
-  float lopticaX,lopticaY; 
-  int lopticaVelicina;
-  int lopticaBoja; 
-  float lopticaBrzinaVert;
-  float lopticaBrzinaHorizon;
-  
-  Loptica(float x,float y) {  
-    lopticaX = x; 
-    lopticaY = y; 
-    lopticaVelicina = 20;
-    lopticaBoja = color(77,0,75);
-    lopticaBrzinaVert = 0;
-    lopticaBrzinaHorizon = 0;
-  }
-}
+float reket_x = 200, reket_y = 200;
+float reket_dx, reket_dy;
 
 /********* SETUP DIO *********/
 
 void setup() {
-    size(600, 600);
-    
+    size(600, 600, P2D);
+    reket_x = width / 2;
+    reket_y = height / 2;
+    GLWindow r = (GLWindow)surface.getNative();
+    r.confinePointer(true);
+    r.setPointerVisible(false);
+
     //Zvukovi
     minim = new Minim(this);
     pjesmica = minim.loadFile("pjesmica.mp3");
@@ -128,173 +120,99 @@ void setup() {
 
 void draw() {
     // Crta sadržaj trenutnog ekrana
+    reket_dx = mouseX - width / 2;
+    reket_dy = mouseY - height / 2;
+    GLWindow r = (GLWindow)surface.getNative();
+    r.warpPointer(width / 2, height / 2);
+    reket_x += reket_dx;
+    reket_y += reket_dy;
+    reket_x = min(max(-reketSirina / 3, reket_x), width + reketSirina / 3);
+    reket_y = min(max(-reketDuzina / 3, reket_y), height + reketDuzina / 3);
+    println(reket_x, reket_y);
     if (zaslon == 0) {
-      pocetniZaslon();
-    } 
+        pocetniZaslon();
+    }
     else if (zaslon == 1) {
-      ZaslonIgre1();
-    } 
+        ZaslonIgre1();
+    }
     else if (zaslon == 2) {
-      ZaslonKrajIgre();
+        ZaslonKrajIgre();
     }
     else if(zaslon == 3){
-      ZaslonInstrukcije();
+        ZaslonInstrukcije();
     }
     else if(zaslon == 4){
-      ZaslonIgre2();                                                                           
+        ZaslonIgre2();
     }
-     else if(zaslon == 5){
-      ZaslonIgre3();
+    else if(zaslon == 5){
+        ZaslonIgre3();
     }
-    println(frameRate);
 }
 
 
 /********* ZASLONI *********/
 
-void pocetniZaslon() {     
+void pocetniZaslon() {
     background(255);
     fill(0,128,255);
     textSize(60);
     textAlign(CENTER);
     text("Flappy Pong", height/2, width/2);
-    
+
     fill(46, 204, 113);
     textSize(20);
     text("Klikni za start!", height/2, width/2 + 50);
-    
+
     fill(255,140,0);
     text("Pritisni tipku 'i' za prikaz instrukcija", height/2, width/2 + 80);
-    
-    pjesmica.play();
-    
-    NacrtajPticicu();
-    NacrtajLopticu(loptica1);
-    PrimijeniGravitaciju(loptica1);
-    ZadrziLopticuNaZaslonu(loptica1);
-}
 
-void ZaslonIgre1() {
-    pjesmica.play();  
-    background(110,193,248);
-    
-    NacrtajLopticu(loptica1); 
-    PrimijeniGravitaciju(loptica1);
-    ZadrziLopticuNaZaslonu(loptica1);
-    NacrtajReket();
-    OdbijanjeLopticeOdReketa(loptica1);  
-    PrimijeniHorizontalnuBrzinu(loptica1);
-    DodavanjeZidova();
-    for (int i = 0; i < zidovi.size(); i++) {
-        IzbrisiZid(i);
-        PomakniZid(i);
-        CrtajZid(i);
-        SudaranjeSaZidom(i,loptica1);
+    if (pjesmica != null){
+        pjesmica.play();
     }
-    IscrtajLinijuZivota(loptica1);  
-    ispisiRezultat();
-    
-    // inicijaliziraj varijable na pocetno
-    PrintTop5 = 1;
-    trazeni = 5;
-    korisnikIme = "";
-    odrediCiglice = 1;
+
+    NacrtajPticicu();
+    loptica1.Nacrtaj();
+    loptica1.PrimijeniGravitaciju();
+    loptica1.ZadrziNaZaslonu();
 }
 
 void ZaslonKrajIgre() {
     //Da bi pjesmica krenula ispočetka u novoj igri
-    pjesmica.pause();
-    pjesmica.rewind();   
-    loptica_zvuk.play();
-    
+    if (pjesmica != null){
+        pjesmica.pause();
+        pjesmica.rewind();
+    }
+    if (loptica_zvuk != null){
+        loptica_zvuk.play();
+    }
+
     background(255);
     textAlign(CENTER);
     fill(0,128,255);
     textSize(40);
     text("Igra je gotova", height/2, width/3 - 20);
-    
-    ispisiRezultat(); 
-            
+
+    ispisiRezultat();
+
     if(PrintTop5 == 1){
-      PronadiTop5();
-      PrintTop5 = 0;
+        PronadiTop5();
+        PrintTop5 = 0;
     }
-    
+
     fill(77,0,75);
     textSize(18);
     if(trazeni != 5)
        UpisiKorisnickoIme();
     else text("Nisi u top 5. :(",  height/2, width/3 + 40);
-   
-   // ne radi unutar if, mora ovdje
-   imena[trazeni] = korisnikIme;
-   
-   IspisiTop5();
-   
-   fill(46, 204, 113);
-   textSize(20);
-   text("Klikni za opet", height/2, width/3 + 250);
-}
 
-void ZaslonIgre2(){
-    background(255);
-    IspisiVrijeme(startVrijeme);
-    //samo jednom želimo odrediti boje ciglica    
-    if(odrediCiglice == 1){
-      OdrediCiglice();
-      odrediCiglice = 0;
-    }
-    NacrtajCiglice();
-    NacrtajLopticu(loptica1);   
-    NacrtajReket();
-    PrimijeniGravitaciju(loptica1);
-    ZadrziLopticuNaZaslonu(loptica1);
-    OdbijanjeLopticeOdReketa(loptica1);  
-    PrimijeniHorizontalnuBrzinu(loptica1);
-    SudaranjeSaCiglicama(loptica1);
-    // kraj igre
-    if( ciglice.size() == 0 ){       
-        krajVrijeme = millis();
-        ukupnoVrijemeSec = (krajVrijeme - startVrijeme)/1000;
-        // ukupnom rezultatu dodajemo broj obrnuto proporacionalan vremenu potrebnom za pogađanje svih ciglica 
-        rezultat += round(150 - 2 * ukupnoVrijemeSec); 
-        //****************
-        zaslon = 5; 
-        startVrijeme2 = millis();
-        odrediCiglice2 = 1;
-    }
-}
+    // ne radi unutar if, mora ovdje
+    imena[trazeni] = korisnikIme;
 
-void ZaslonIgre3(){  
-    background(255);
-    IspisiVrijeme(startVrijeme2);
-    //samo jednom želimo odrediti boje ciglica    
-    if(odrediCiglice2 == 1){
-      OdrediCiglice2();
-      odrediCiglice2 = 0;
-    }    
-    NacrtajCiglice();
-    NacrtajLopticu(loptica1);
-    NacrtajLopticu(loptica2);
-    NacrtajReket2();
-    PrimijeniGravitaciju(loptica1);
-    PrimijeniGravitaciju(loptica2);
-    ZadrziLopticuNaZaslonu(loptica1);
-    ZadrziLopticuNaZaslonu(loptica2);
-    OdbijanjeLopticeOdReketa2(loptica1);
-    OdbijanjeLopticeOdReketa2(loptica2);
-    PrimijeniHorizontalnuBrzinu(loptica1);
-    PrimijeniHorizontalnuBrzinu(loptica2);
-    SudaranjeSaCiglicama(loptica1);
-    SudaranjeSaCiglicama(loptica2);
-    // kraj igre    
-    if( ciglice.size()==0){
-        zaslon = 2;
-        krajVrijeme2 = millis();
-        ukupnoVrijemeSec2 = (krajVrijeme2 - startVrijeme2)/1000;
-        // ukupnom rezultatu dodajemo broj obrnuto proporacionalan vremenu potrebnom za pogađanje svih ciglica 
-        rezultat += round(150 - 2 * ukupnoVrijemeSec2); 
-    }
+    IspisiTop5();
+
+    fill(46, 204, 113);
+    textSize(20);
+    text("Klikni za opet", height/2, width/3 + 250);
 }
 
 
@@ -345,63 +263,65 @@ void ZaslonInstrukcije(){
 public void mousePressed() {
     // ako smo na početnom zaslonu ili na zaslonu s instrukcijama, nakon klika prebaci na zaslon za igru 1
     if (zaslon == 0 || zaslon == 3) {
-      loptica1=new Loptica(100,300);      
-      zaslon = 1;
+        InicijalizirajIgru1();
+        zaslon = 1;
     }
-    
+
     // ako smo na zaslonu za kraj igre, postavi varijable na početno i ponovno pokreni igru 1
     else if (zaslon == 2){
-      //Da bi pjesmica krenula ispočetka u novoj igri
-      loptica_zvuk.pause();
-      loptica_zvuk.rewind(); 
-      
-      rezultat = 0;
-      zivot = maxZivot;
-      loptica1=new Loptica(100,100);
-      loptica2=new Loptica(100,500);      
-      zadnjeVrijemeDodavanja = 0;
-      zidovi.clear();
-      zaslon = 1;
+        //Da bi pjesmica krenula ispočetka u novoj igri
+        if (loptica_zvuk != null){
+            loptica_zvuk.pause();
+            loptica_zvuk.rewind();
+        }
+
+        rezultat = 0;
+        zivot = maxZivot;
+        loptica1=new Loptica(100,100);
+        loptica2=new Loptica(100,500);
+        zadnjeVrijemeDodavanja = 0;
+        zidovi.clear();
+        zaslon = 1;
    }
 }
 
 void keyPressed() {
     if( key == 's' && zaslon == 1){
-      looping=false;
-      noLoop();
+        looping=false;
+        noLoop();
     }
-    
+
     else if( key == 'x' && (zaslon == 1 || zaslon == 4 || zaslon == 5)){
-      loptica1=new Loptica(100,300);      
-      zaslon = 0;
+        loptica1=new Loptica(100,300);
+        zaslon = 0;
     }
-    
+
     else if( key == 'p' && looping == false && zaslon == 1){
-      looping = true;
-      loop();
+        looping = true;
+        loop();
     }
     // ako stisnemo pauzu u 2. ili 3. igri moramo ignorirati vrijeme koje prođe dok traje pauza
     else if( key == 's' && (zaslon == 4 || zaslon == 5)){
-      looping=false;
-      noLoop();
-      meduvrijemePocetak = millis();
+        looping=false;
+        noLoop();
+        meduvrijemePocetak = millis();
     }
     // vrijeme u pauzi ne zbrajamo u ukupno vrijeme tako da pomaknemo statVrijeme za taj iznos vremena
     else if( key == 'p' && looping == false && (zaslon == 4 || zaslon == 5)){
-      if(zaslon == 4) startVrijeme += millis() - meduvrijemePocetak;
-      else if(zaslon == 5) startVrijeme2 += millis() - meduvrijemePocetak; 
-      looping = true;
-      loop();
+        if(zaslon == 4) startVrijeme += millis() - meduvrijemePocetak;
+        else if(zaslon == 5) startVrijeme2 += millis() - meduvrijemePocetak;
+        looping = true;
+        loop();
     }
     else if( key == 'i' && zaslon == 0){
-      zaslon = 3;
+        zaslon = 3;
     }
     else if (key == ENTER ) {
-      korisnikIme = upisano;
-      upisano = "";
-    } 
+        korisnikIme = upisano;
+        upisano = "";
+    }
     else {
-      upisano = upisano + key; 
+        upisano = upisano + key;
     }
 }
 
@@ -415,175 +335,13 @@ void NacrtajPticicu() {
     y=150+8*sin(x/2); //za dojam da ptičica leti
 }
 
-void NacrtajLopticu(Loptica l) {
-    fill(l.lopticaBoja);
-    ellipse(l.lopticaX, l.lopticaY, l.lopticaVelicina, l.lopticaVelicina);
-}
-
-void PrimijeniGravitaciju(Loptica l) {
-    // brzinu loptice povećava utjecaj gravitacije, a smanjuje otpor zraka
-    // vertikalni položaj loptice mijenja se za brzinu loptice
-    l.lopticaBrzinaVert += gravitacija;
-    l.lopticaBrzinaVert -= (l.lopticaBrzinaVert * otporZraka) * abs(l.lopticaBrzinaVert);
-    l.lopticaY += l.lopticaBrzinaVert;      
-}
-
-void OdbijOdDna(float podloga,Loptica l) {
-    // najdonju točku loptice postavi na dno podloge, promijeni smjer brzine (pomonoži s -1) 
-    // smanji brzinu za otpor podloge
-    l.lopticaY = podloga - l.lopticaVelicina/2;
-    l.lopticaBrzinaVert -= (l.lopticaBrzinaVert * otporPodlogeVert);
-    l.lopticaBrzinaVert *= -1;
-}
-
-void OdbijOdStropa(float podloga,Loptica l) {
-    l.lopticaY = podloga + l.lopticaVelicina/2;
-    l.lopticaBrzinaVert -= (l.lopticaBrzinaVert * otporPodlogeVert);
-    l.lopticaBrzinaVert *= -1;
-}
-
-void PrimijeniHorizontalnuBrzinu(Loptica l){
-    l.lopticaX += l.lopticaBrzinaHorizon;
-    l.lopticaBrzinaHorizon -= (l.lopticaBrzinaHorizon * otporZraka) * abs(l.lopticaBrzinaHorizon);
-}
-
-void OdbijOdLijevogRuba(float podloga,Loptica l){
-    l.lopticaX = podloga + l.lopticaVelicina/2;
-    l.lopticaBrzinaHorizon -= (l.lopticaBrzinaHorizon * otporPodlogeHoriz);
-    l.lopticaBrzinaHorizon *= -1;
-}
-
-void OdbijOdDesnogRuba(float podloga,Loptica l){
-    l.lopticaX = podloga-(l.lopticaVelicina/2);
-    l.lopticaBrzinaHorizon *= -1;
-    l.lopticaBrzinaHorizon -= (l.lopticaBrzinaHorizon * otporPodlogeHoriz);
-}
-
-void ZadrziLopticuNaZaslonu(Loptica l) {
-    // ako loptica padne na pod, tj. ako najdonja točka loptice bude veća od visine ekrana
-    if (l.lopticaY + l.lopticaVelicina/2 > height) { 
-      OdbijOdDna(height,l);
-    }
-    // ako loptica dotakne strop
-    if (l.lopticaY - l.lopticaVelicina/2 < 0) {
-      OdbijOdStropa(0,l);
-    }
-    // ako loptica dotakne lijevi rub
-    if (l.lopticaX - l.lopticaVelicina/2 < 0){
-      OdbijOdLijevogRuba(0,l);
-    }
-    // ako loptica dotakne desni rub
-    if (l.lopticaX + l.lopticaVelicina/2 > width){
-      OdbijOdDesnogRuba(width,l);
-    }
-}
 
 void NacrtajReket(){
     fill(reketBoja);
     rectMode(CENTER);
-    rect(mouseX, mouseY, reketSirina, reketDuzina);
+    rect(reket_x, reket_y, reketSirina, reketDuzina);
 }
 
-void OdbijanjeLopticeOdReketa(Loptica l) {
-    // pomak misa u novom u odnosu na prethodni frame
-    float pomakMisa = mouseY - pmouseY;  
-    // ako se loptica nalazi unutar širine reketa
-    if ((l.lopticaX + l.lopticaVelicina/2 > mouseX- reketSirina/2) && (l.lopticaX - l.lopticaVelicina/2 < mouseX + reketSirina/2)) {
-      // ako je udaljenost središta loptice i središta reketa manja od pola veličine loptice i pomaka miša
-      // tj. ako je došlo do sudara loptice i reketa 
-      if (dist(l.lopticaX, l.lopticaY, l.lopticaX, mouseY) <= l.lopticaVelicina/2 + abs(pomakMisa)) {
-          OdbijOdDna(mouseY,l);
-          // povećaj brzinu i položaj loptice u odnosu na jačinu udara
-          if (pomakMisa < 0) {
-            l.lopticaY += pomakMisa;
-            l.lopticaBrzinaVert += pomakMisa;
-          }
-          //ide li loptica lijevo ili desno ovisi o točki reketa na koju je pala
-          l.lopticaBrzinaHorizon = (l.lopticaX - mouseX)/10; // 1/10 vrijednosti najprirodnije
-      }
-    }
-}
-
-void DodavanjeZidova() {
-    // ako je između sada i vremena zadnjeg dodavanja zida prošlo više od zadanog intervala
-    if (millis() - zadnjeVrijemeDodavanja > intervalDodavanjaZidova) {
-        // udaljenost između novog para zidova bude random vrijednost unutar zadanog intervala
-        int udaljenostZidova = round(random(minUdaljenostZidova, maxUdaljenostZidova));
-        // visina gornjeg zida bude također random vrijednost
-        int visinaGornjegZida = round(random(0, height-udaljenostZidova));
-        // zid pamtimo kao niz u kojem su vrijednosti
-        // {početnaTočkaZida, visinaGornjegZida, širinaZida, udaljenostZidova, brojSudaraLopticeSaZidom};
-        int[] noviParZidova = {width, visinaGornjegZida, sirinaZida, udaljenostZidova, 0}; 
-        zidovi.add(noviParZidova);
-        zadnjeVrijemeDodavanja = millis();
-    }
-}
-
-void CrtajZid(int index) {
-    int[] zid = zidovi.get(index);
-    // zid pamtimo kao niz u kojem su vrijednosti
-    // {početnaTočkaZida, visinaGornjegZida, širinaZida, udaljenostZidova, brojSudaraLopticeSaZidom};
-    rectMode(CORNER);
-    fill(bojaZidova);
-    // gornji zid: od (početnaTočka, 0) do (širinaZida, visinaGornjegZida)
-    rect(zid[0], 0, zid[2], zid[1], 7);
-    //donji zid: od (početnaTočka, visinaGornjegZida + udaljenostZidova) do (širinaZida, preostala visina))
-    rect(zid[0], zid[1]+zid[3], zid[2], height-(zid[1]+zid[3]), 7);
-}
-void PomakniZid(int index) {
-    int[] zid = zidovi.get(index);
-    // zidove mičemo ulijevo
-    zid[0] -= BrzinaZidova;
-}
-
-void IzbrisiZid(int index) {
-    int[] zid = zidovi.get(index);
-    // ako je početnaTočka - širinaZida < 0, odnosno zid ispada sa zaslona
-    if (zid[0]+zid[2] <= 0) {
-      zidovi.remove(index);
-    }
-}
-
-void SudaranjeSaZidom(int index,Loptica l) {
-  int[] zid = zidovi.get(index);
-  int sudar = zid[4];
-  int gornjiZidX = zid[0];
-  int gornjiZidY = 0;
-  int gornjiZidVisina = zid[1];
-  int donjiZidX = zid[0];
-  int donjiZidY = zid[1] + zid[3];
-  int donjiZidVisina = height - ( zid[1] + zid[3] );
-  
-  // ako se sudari s gornjim zidom
-  if ((l.lopticaX + l.lopticaVelicina/2 > gornjiZidX) &&
-      (l.lopticaX - l.lopticaVelicina/2 < gornjiZidX + sirinaZida) &&
-      (l.lopticaY + l.lopticaVelicina/2 > gornjiZidY) && 
-      (l.lopticaY - l.lopticaVelicina/2 < gornjiZidY + gornjiZidVisina)) 
-      { 
-          fill(color(255,0,0));
-          rect(gornjiZidX, gornjiZidY, sirinaZida, gornjiZidVisina, 7);
-          SmanjiZivot(l); 
-          zid[4] = 1; // dogodio se sudar s tim zidom
-      }
-  // ako se sudari s donjim zidom
-  if ((l.lopticaX + l.lopticaVelicina/2 > donjiZidX) &&
-      (l.lopticaX - l.lopticaVelicina/2 < donjiZidX + sirinaZida) &&
-      (l.lopticaY + l.lopticaVelicina/2 > donjiZidY) &&
-      (l.lopticaY - l.lopticaVelicina/2 < donjiZidY + donjiZidVisina)) 
-      {
-          fill(color(255,0,0));
-          rect(donjiZidX, donjiZidY, sirinaZida, donjiZidVisina, 7);
-          SmanjiZivot(l); 
-          zid[4]=1; // dogodio se sudar s tim zidom
-      }
-  
-  if (l.lopticaX > (zid[0] + sirinaZida) && sudar == 0) {
-      // samo jedanput brojimo jedan zid
-      sudar = 1; 
-      zid[4] = 1;
-      rezultat++; //ovaj if se izvrši i kada nemamo sudar
-  }
-}
 
 void ispisiRezultat(){
     fill(255,140,0);
@@ -596,95 +354,67 @@ void IscrtajLinijuZivota(Loptica l) {
     noStroke();
     fill(236, 240, 241);
     rectMode(CORNER);
-    rect(l.lopticaX- sirinaLinijeZivota/2, l.lopticaY - 30, sirinaLinijeZivota, 5);
+    rect(l.X- sirinaLinijeZivota/2, l.Y - 30, sirinaLinijeZivota, 5);
     if (zivot > 60) {
-      fill(57,255,20);
-    } 
+        fill(57,255,20);
+    }
     else if (zivot > 30) {
-      fill(230, 126, 34);
-    } 
+        fill(230, 126, 34);
+    }
     else {
-      fill(255, 0, 0);
+        fill(255, 0, 0);
     }
     rectMode(CORNER);
-    rect(l.lopticaX-sirinaLinijeZivota/2, l.lopticaY - 30, sirinaLinijeZivota * zivot/maxZivot, 5);
+    rect(l.X-sirinaLinijeZivota/2, l.Y - 30, sirinaLinijeZivota * zivot/maxZivot, 5);
 }
 
 void SmanjiZivot(Loptica l){
     zivot -= 1;
     if (zivot <= 0){
-      // kraj igre 1, prijedi na igru 2
-      //****************
-      zaslon = 4;
-      // postavi koordinate za lopticu u novoj igri
-      l.lopticaX = height/2; l.lopticaY = 400;
-      // odredi startVrijeme za drugu igru
-      startVrijeme = millis();
+        // kraj igre 1, prijedi na igru 2
+        //****************
+        zaslon = 4;
+        // postavi koordinate za lopticu u novoj igri
+        l.X = height/2; l.Y = 400;
+        // odredi startVrijeme za drugu igru
+        startVrijeme = millis();
     }
 }
 
-/********* FUNKCIJE 2. IGRE *********/ 
+/********* FUNKCIJE 2. IGRE *********/
 
 void NacrtajReket2(){
     fill(reketBoja);
     rectMode(CENTER);
-    rect(mouseX,height - 20 , reketSirina, reketDuzina);
-}
-  
- void OdbijanjeLopticeOdReketa2(Loptica l) {
-    // pomak misa u novom u odnosu na prethodni frame
-    float pomakMisa = mouseX - pmouseX;  
-    // ako se loptica nalazi unutar širine reketa
-    if ((l.lopticaX + l.lopticaVelicina/2 > mouseX- reketSirina/2) && (l.lopticaX - l.lopticaVelicina/2 < mouseX + reketSirina/2)) {
-      // ako je udaljenost središta loptice i središta reketa manja od pola veličine loptice i pomaka miša
-      // tj. ako je došlo do sudara loptice i reketa 
-      if (dist(l.lopticaX, l.lopticaY, l.lopticaX, height - 50) <= l.lopticaVelicina/2 + abs(pomakMisa)) {
-          OdbijOdDna2(height - 20,l);       
-          // povećaj brzinu i položaj loptice u odnosu na jačinu udara
-          if (pomakMisa < 0) {
-            l.lopticaX += (l.lopticaX - mouseX)/10;
-            l.lopticaBrzinaVert += pomakMisa;
-          }        
-          //ide li loptica lijevo ili desno ovisi o točki reketa na koju je pala
-          l.lopticaBrzinaHorizon = pomakMisa;// 1/10 vrijednosti najprirodnije
-      }
-    }
+    rect(reket_x ,height - 20 , reketSirina, reketDuzina);
 }
 
-  void OdbijOdDna2(float podloga,Loptica l) {
-    // najdonju točku loptice postavi na dno podloge, promijeni smjer brzine (pomonoži s -1) 
-    // smanji brzinu za otpor podloge
-    l.lopticaY = podloga - l.lopticaVelicina/2;
-    l.lopticaBrzinaVert -= (l.lopticaBrzinaVert * otporPodlogeVert);
-    l.lopticaBrzinaVert *= -0.5;
-}
-
-void OdrediCiglice(){    
-    // ciglice ćemo pamtiti u listu 
+void OdrediCiglice(){
+    // ciglice ćemo pamtiti u listu
     // sve će biti iste širine (50) i dužine (10)
     for(int i = 0; i < 12; i++)
-      for(int j = 0; j < 10; j++){
-        // prvi clan niza je pocetak cigle x koordinata, zatim pocetak cigle
-        // y koordinata, i boja koju ćemo random odabrati izmedu njih 5
-        // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
-        int boja = round(random(0,4));
-        int[] novaCiglica = {i*50, j*20 + 50, boja}; 
-        ciglice.add(novaCiglica);
-      }  
+        for(int j = 0; j < 10; j++){
+            // prvi clan niza je pocetak cigle x koordinata, zatim pocetak cigle
+            // y koordinata, i boja koju ćemo random odabrati izmedu njih 5
+            // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
+            int boja = round(random(0,4));
+            int[] novaCiglica = {i*50, j*20 + 50, boja};
+            ciglice.add(novaCiglica);
+        }
 }
 
-void OdrediCiglice2(){    
-    // ciglice ćemo pamtiti u listu 
+void OdrediCiglice2(){
+    // ciglice ćemo pamtiti u listu
     // sve će biti iste širine (50) i dužine (10)
     for(int i = 0; i < 12; i++)
-      for(int j = 0; j < 8; j++){
-        // prvi clan niza je pocetak cigle x koordinata, zatim pocetak cigle
-        // y koordinata, i boja koju ćemo random odabrati izmedu njih 5
-        // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
-        int boja = round(random(0,4));
-        int[] novaCiglica = {i*50, j*20 + 50, boja}; 
-        ciglice.add(novaCiglica);
-      }  
+        for(int j = 0; j < 8; j++){
+            // prvi clan niza je pocetak cigle x koordinata, zatim pocetak cigle
+            // y koordinata, i boja koju ćemo random odabrati izmedu njih 5
+            // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
+            int boja = round(random(0,4));
+            int[] novaCiglica = {i*50, j*20 + 50, boja};
+            ciglice.add(novaCiglica);
+        }
 }
 
 void NacrtajCiglice(){
@@ -704,16 +434,16 @@ void NacrtajCiglice(){
 
 void SudaranjeSaCiglicama(Loptica l) {
   for(int i = ciglice.size() - 1; i >= 0; i-- ){
-    int[] ciglica = ciglice.get(i);  
+    int[] ciglica = ciglice.get(i);
     // ako se sudari s ciglicom
-    if ((l.lopticaX + l.lopticaVelicina/2 > ciglica[0]) &&
-        (l.lopticaX - l.lopticaVelicina/2 < ciglica[0] + ciglaSirina) &&
-        (l.lopticaY + l.lopticaVelicina/2 > ciglica[1]) && 
-        (l.lopticaY - l.lopticaVelicina/2 < ciglica[1] + ciglaDuzina)) 
-        { 
+    if ((l.X + l.Velicina/2 > ciglica[0]) &&
+        (l.X - l.Velicina/2 < ciglica[0] + ciglaSirina) &&
+        (l.Y + l.Velicina/2 > ciglica[1]) &&
+        (l.Y - l.Velicina/2 < ciglica[1] + ciglaDuzina))
+        {
             //OdbijOdStropa(ciglica[1]);
-            l.lopticaBrzinaVert -= (l.lopticaBrzinaVert * otporPodlogeVert);
-            l.lopticaBrzinaVert *= -1;
+            l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
+            l.BrzinaVert *= -1;
             ciglice.remove(i);
             break;
         }
@@ -729,48 +459,49 @@ void IspisiVrijeme(int startVrijeme){
 
 /********* FUNKCIJE ZA ISPIS NA KRAJU *********/
 void PronadiTop5(){
-   String[] top5 = loadStrings("top5.txt");
-   // zapisemo rezultate i imena iz txt u 2 odvojena niza
-   for(int i = 0; i < 5; i++){
-     String[] line = split(top5[i], ' ');
-     topRez[i] = Integer.parseInt(line[0]);
-     imena[i] = line[1];
-   }
-   // tražimo da li je rezultat veći od nekog u top5
-   for(int i = 0; i < 5; i++)
-     if(rezultat > topRez[i]){
-         trazeni = i;
-         break;
-     }
-   // ako je, ubacujemo taj rezultat i korisničko ime na odgovarajuće mjesto
-   if(trazeni >= 0){
-     for(int i=4; i > trazeni; i--){
-       int temp = topRez[i];
-       String tempIme = imena[i];
-       topRez[i] = topRez[i-1];
-       imena[i] = imena[i-1];
-       topRez[i-1] = temp;
-       imena[i-1] = tempIme;
-     } 
-     topRez[trazeni] = rezultat;
-   }
+    String[] top5 = loadStrings("top5.txt");
+    // zapisemo rezultate i imena iz txt u 2 odvojena niza
+    for(int i = 0; i < 5; i++){
+        String[] line = split(top5[i], ' ');
+        topRez[i] = Integer.parseInt(line[0]);
+        imena[i] = line[1];
+    }
+    // tražimo da li je rezultat veći od nekog u top5
+    for(int i = 0; i < 5; i++)
+        if(rezultat > topRez[i]){
+            trazeni = i;
+            break;
+        }
+    // ako je, ubacujemo taj rezultat i korisničko ime na odgovarajuće mjesto
+    if(trazeni >= 0){
+        for(int i=4; i > trazeni; i--){
+            int temp = topRez[i];
+            String tempIme = imena[i];
+            topRez[i] = topRez[i-1];
+            imena[i] = imena[i-1];
+            topRez[i-1] = temp;
+            imena[i-1] = tempIme;
+        }
+        topRez[trazeni] = rezultat;
+    }
 }
 
 void IspisiTop5(){
-  // zapisemo (novi) poredak ponovno u txt
-   String[] top5 = new String[5];
-   for(int i = 0; i < 5; i++)
-       top5[i] = str(topRez[i]) + " " + imena[i];
-   saveStrings("top5.txt", top5);
-   
-   // ispisi na zaslon top 5
-   text("Mjesto      Ime      Rezultat", height/2, width/3 + 100);
-   for(int i = 0; i < 5; i++){
-       String text = str(i+1) + ".          " + imena[i] + "          " + str(topRez[i]);
-       if(i == trazeni) fill(255,0,0);
-       if(i == trazeni + 1) fill(77,0,75); 
-       text(text, height/2, width/3 + 120 + 20*i);
-   }
+    // zapisemo (novi) poredak ponovno u txt
+    String[] top5 = new String[5];
+    for(int i = 0; i < 5; i++)
+        top5[i] = str(topRez[i]) + " " + imena[i];
+
+    saveStrings("top5.txt", top5);
+
+    // ispisi na zaslon top 5
+    text("Mjesto      Ime      Rezultat", height/2, width/3 + 100);
+    for(int i = 0; i < 5; i++){
+        String text = str(i+1) + ".          " + imena[i] + "          " + str(topRez[i]);
+        if(i == trazeni) fill(255,0,0);
+        if(i == trazeni + 1) fill(77,0,75);
+        text(text, height/2, width/3 + 120 + 20*i);
+    }
 }
 
 void UpisiKorisnickoIme(){
