@@ -433,21 +433,66 @@ void NacrtajCiglice(){
 }
 
 void SudaranjeSaCiglicama(Loptica l) {
-  for(int i = ciglice.size() - 1; i >= 0; i-- ){
-    int[] ciglica = ciglice.get(i);
-    // ako se sudari s ciglicom
-    if ((l.X + l.Velicina/2 > ciglica[0]) &&
-        (l.X - l.Velicina/2 < ciglica[0] + ciglaSirina) &&
-        (l.Y + l.Velicina/2 > ciglica[1]) &&
-        (l.Y - l.Velicina/2 < ciglica[1] + ciglaDuzina))
-        {
-            //OdbijOdStropa(ciglica[1]);
-            l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
-            l.BrzinaVert *= -1;
-            ciglice.remove(i);
-            break;
+    if (l.BrzinaVert < 0){
+        for(int i = ciglice.size() - 1; i >= 0; i-- ){
+            int[] ciglica = ciglice.get(i);
+            // ako se sudari s ciglicom
+            float udarac_x = HorizontalCollide(l.pX - l.Velicina/2, l.pY - l.Velicina/2, l.X - l.Velicina/2, l.Y - l.Velicina/2, ciglica[1] + ciglaDuzina, ciglica[0], ciglica[0] + ciglaSirina);
+            float udarac_x2 = HorizontalCollide(l.pX + l.Velicina/2, l.pY - l.Velicina/2, l.X + l.Velicina/2, l.Y - l.Velicina/2, ciglica[1] + ciglaDuzina, ciglica[0], ciglica[0] + ciglaSirina);
+            if ((!Float.isNaN(udarac_x)) || !(Float.isNaN(udarac_x2))) {
+                //OdbijOdStropa(ciglica[1]);
+                l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
+                l.BrzinaVert *= -1;
+                ciglice.remove(i);
+                break;
+            }
         }
-  }
+    }
+    if (l.BrzinaVert > 0){
+        for(int i = ciglice.size() - 1; i >= 0; i-- ){
+            int[] ciglica = ciglice.get(i);
+            // ako se sudari s ciglicom
+            float udarac_x = HorizontalCollide(l.pX - l.Velicina/2, l.pY + l.Velicina/2, l.X - l.Velicina/2, l.Y + l.Velicina/2, ciglica[1], ciglica[0], ciglica[0] + ciglaSirina);
+            float udarac_x2 = HorizontalCollide(l.pX + l.Velicina/2, l.pY + l.Velicina/2, l.X + l.Velicina/2, l.Y + l.Velicina/2, ciglica[1], ciglica[0], ciglica[0] + ciglaSirina);
+            if ((!Float.isNaN(udarac_x)) || !(Float.isNaN(udarac_x2))) {
+                //OdbijOdStropa(ciglica[1]);
+                l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
+                l.BrzinaVert *= -1;
+                ciglice.remove(i);
+                break;
+            }
+        }
+    }
+    if (l.BrzinaHorizon > 0){
+        for(int i = ciglice.size() - 1; i >= 0; i-- ){
+            int[] ciglica = ciglice.get(i);
+            // ako se sudari s ciglicom
+            float udarac_y = VerticalCollide(l.pX + l.Velicina/2, l.pY - l.Velicina/2, l.X + l.Velicina/2, l.Y - l.Velicina/2, ciglica[0], ciglica[1], ciglica[1] + ciglaDuzina);
+            float udarac_y2 = VerticalCollide(l.pX + l.Velicina/2, l.pY + l.Velicina/2, l.X + l.Velicina/2, l.Y + l.Velicina/2, ciglica[0], ciglica[1], ciglica[1] + ciglaDuzina);
+            if ((!Float.isNaN(udarac_y)) || !(Float.isNaN(udarac_y2))) {
+                //OdbijOdStropa(ciglica[1]);
+                l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
+                l.BrzinaHorizon *= -1;
+                ciglice.remove(i);
+                break;
+            }
+        }
+    }
+    if (l.BrzinaHorizon < 0){
+        for(int i = ciglice.size() - 1; i >= 0; i-- ){
+            int[] ciglica = ciglice.get(i);
+            // ako se sudari s ciglicom
+            float udarac_y = VerticalCollide(l.pX - l.Velicina/2, l.pY - l.Velicina/2, l.X - l.Velicina/2, l.Y - l.Velicina/2, ciglica[0] + ciglaSirina, ciglica[1], ciglica[1] + ciglaDuzina);
+            float udarac_y2 = VerticalCollide(l.pX - l.Velicina/2, l.pY + l.Velicina/2, l.X - l.Velicina/2, l.Y + l.Velicina/2, ciglica[0] + ciglaSirina, ciglica[1], ciglica[1] + ciglaDuzina);
+            if ((!Float.isNaN(udarac_y)) || !(Float.isNaN(udarac_y2))) {
+                //OdbijOdStropa(ciglica[1]);
+                l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
+                l.BrzinaHorizon *= -1;
+                ciglice.remove(i);
+                break;
+            }
+        }
+    }
 }
 
 void IspisiVrijeme(int startVrijeme){

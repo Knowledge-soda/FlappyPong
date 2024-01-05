@@ -1,3 +1,5 @@
+class Igra1 {
+}
 void InicijalizirajIgru1() {
     reket_x = 90;
     reket_y = 350;

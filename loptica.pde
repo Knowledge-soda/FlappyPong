@@ -1,5 +1,20 @@
+float VerticalCollide(float x1, float y1, float x2, float y2, float xl, float ylu, float yld){
+    if ((x1 < xl && x2 < xl) || (x1 > xl && x2 > xl)) return Float.NaN;
+    float y_interp = map(xl, x1, x2, y1, y2);
+    if (ylu < y_interp && y_interp < yld) return y_interp;
+    return Float.NaN;
+}
+
+float HorizontalCollide(float x1, float y1, float x2, float y2, float yl, float xll, float xlr){
+    if ((y1 < yl && y2 < yl) || (y1 > yl && y2 > yl)) return Float.NaN;
+    float x_interp = map(yl, y1, y2, x1, x2);
+    if (xll < x_interp && x_interp < xlr) return x_interp;
+    return Float.NaN;
+}
+
 class Loptica {
     float X,Y;
+    float pX, pY;
     int Velicina;
     int Boja;
     float BrzinaVert;
@@ -8,6 +23,8 @@ class Loptica {
     Loptica(float x,float y) {
         X = x;
         Y = y;
+        pX = x;
+        pY = y;
         Velicina = 20;
         Boja = color(77,0,75);
         BrzinaVert = 0;
@@ -22,9 +39,10 @@ class Loptica {
     void PrimijeniGravitaciju() {
         // brzinu loptice povećava utjecaj gravitacije, a smanjuje otpor zraka
         // vertikalni položaj loptice mijenja se za brzinu loptice
+        pY = Y;
+        Y += BrzinaVert;
         BrzinaVert += gravitacija;
         BrzinaVert -= (BrzinaVert * otporZraka) * abs(BrzinaVert);
-        Y += BrzinaVert;
     }
 
     void OdbijOdDna(float podloga) {
@@ -42,6 +60,7 @@ class Loptica {
     }
 
     void PrimijeniHorizontalnuBrzinu(){
+        pX = X;
         X += BrzinaHorizon;
         BrzinaHorizon -= (BrzinaHorizon * otporZraka) * abs(BrzinaHorizon);
     }
