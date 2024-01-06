@@ -25,6 +25,8 @@ int zaslon = 0;
 Loptica loptica1 = new Loptica(100,100);
 Loptica loptica2 = new Loptica(100,500);
 
+//Reket reket;
+
 // početna gravitacija
 float gravitacija = 0.3;
 
@@ -32,22 +34,6 @@ float gravitacija = 0.3;
 float otporZraka = 0.00001;
 float otporPodlogeVert = 0.35;
 float otporPodlogeHoriz = 0.3;
-
-// reket info
-color reketBoja = color(0);
-float reketSirina = 100;
-int reketDuzina = 10;
-
-
-//zidovi info
-int BrzinaZidova = 5;
-int intervalDodavanjaZidova = 1000;
-float zadnjeVrijemeDodavanja = 0;
-int minUdaljenostZidova = 200;
-int maxUdaljenostZidova = 300;
-int sirinaZida = 80;
-color bojaZidova = color(0,128,0);
-ArrayList<int[]> zidovi = new ArrayList<int[]>();
 
 // zivot i rezultat info
 int maxZivot = 100;
@@ -91,15 +77,13 @@ PImage ptica;
 int x=0;
 float y=150;
 
-float reket_x = 200, reket_y = 200;
-float reket_dx, reket_dy;
+Igra1 igra1;
+Igra2 igra2, igra3;
 
 /********* SETUP DIO *********/
 
 void setup() {
     size(600, 600, P2D);
-    reket_x = width / 2;
-    reket_y = height / 2;
     GLWindow r = (GLWindow)surface.getNative();
     r.confinePointer(true);
     r.setPointerVisible(false);
@@ -120,20 +104,11 @@ void setup() {
 
 void draw() {
     // Crta sadržaj trenutnog ekrana
-    reket_dx = mouseX - width / 2;
-    reket_dy = mouseY - height / 2;
-    GLWindow r = (GLWindow)surface.getNative();
-    r.warpPointer(width / 2, height / 2);
-    reket_x += reket_dx;
-    reket_y += reket_dy;
-    reket_x = min(max(-reketSirina / 3, reket_x), width + reketSirina / 3);
-    reket_y = min(max(-reketDuzina / 3, reket_y), height + reketDuzina / 3);
-    println(reket_x, reket_y);
     if (zaslon == 0) {
         pocetniZaslon();
     }
     else if (zaslon == 1) {
-        ZaslonIgre1();
+        igra1.Igraj();
     }
     else if (zaslon == 2) {
         ZaslonKrajIgre();
@@ -142,10 +117,10 @@ void draw() {
         ZaslonInstrukcije();
     }
     else if(zaslon == 4){
-        ZaslonIgre2();
+        igra2.Igraj();
     }
     else if(zaslon == 5){
-        ZaslonIgre3();
+        igra3.Igraj();
     }
 }
 
@@ -263,8 +238,7 @@ void ZaslonInstrukcije(){
 public void mousePressed() {
     // ako smo na početnom zaslonu ili na zaslonu s instrukcijama, nakon klika prebaci na zaslon za igru 1
     if (zaslon == 0 || zaslon == 3) {
-        InicijalizirajIgru1();
-        zaslon = 1;
+        igra1 = new Igra1();
     }
 
     // ako smo na zaslonu za kraj igre, postavi varijable na početno i ponovno pokreni igru 1
@@ -276,12 +250,7 @@ public void mousePressed() {
         }
 
         rezultat = 0;
-        zivot = maxZivot;
-        loptica1=new Loptica(100,100);
-        loptica2=new Loptica(100,500);
-        zadnjeVrijemeDodavanja = 0;
-        zidovi.clear();
-        zaslon = 1;
+        igra1 = new Igra1();
    }
 }
 
@@ -336,13 +305,6 @@ void NacrtajPticicu() {
 }
 
 
-void NacrtajReket(){
-    fill(reketBoja);
-    rectMode(CENTER);
-    rect(reket_x, reket_y, reketSirina, reketDuzina);
-}
-
-
 void ispisiRezultat(){
     fill(255,140,0);
     textSize(50);
@@ -373,127 +335,11 @@ void SmanjiZivot(Loptica l){
     if (zivot <= 0){
         // kraj igre 1, prijedi na igru 2
         //****************
-        zaslon = 4;
-        // postavi koordinate za lopticu u novoj igri
-        l.X = height/2; l.Y = 400;
-        // odredi startVrijeme za drugu igru
-        startVrijeme = millis();
+        igra2 = new Igra2(2);
     }
 }
 
 /********* FUNKCIJE 2. IGRE *********/
-
-void NacrtajReket2(){
-    fill(reketBoja);
-    rectMode(CENTER);
-    rect(reket_x ,height - 20 , reketSirina, reketDuzina);
-}
-
-void OdrediCiglice(){
-    // ciglice ćemo pamtiti u listu
-    // sve će biti iste širine (50) i dužine (10)
-    for(int i = 0; i < 12; i++)
-        for(int j = 0; j < 10; j++){
-            // prvi clan niza je pocetak cigle x koordinata, zatim pocetak cigle
-            // y koordinata, i boja koju ćemo random odabrati izmedu njih 5
-            // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
-            int boja = round(random(0,4));
-            int[] novaCiglica = {i*50, j*20 + 50, boja};
-            ciglice.add(novaCiglica);
-        }
-}
-
-void OdrediCiglice2(){
-    // ciglice ćemo pamtiti u listu
-    // sve će biti iste širine (50) i dužine (10)
-    for(int i = 0; i < 12; i++)
-        for(int j = 0; j < 8; j++){
-            // prvi clan niza je pocetak cigle x koordinata, zatim pocetak cigle
-            // y koordinata, i boja koju ćemo random odabrati izmedu njih 5
-            // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
-            int boja = round(random(0,4));
-            int[] novaCiglica = {i*50, j*20 + 50, boja};
-            ciglice.add(novaCiglica);
-        }
-}
-
-void NacrtajCiglice(){
-    rectMode(CORNER);
-    stroke(0);
-    for(int i = 0; i < ciglice.size(); i++){
-        // boje: 0 - crvena, 1 - žuta, 2 - plava, 3 - zelena, 4 - narančasta
-        int[] ciglica = ciglice.get(i);
-        if(ciglica[2] == 0) fill(255,0,0);
-        else if(ciglica[2] == 1) fill(255,255,0);
-        else if(ciglica[2] == 2) fill(30,144,255);
-        else if(ciglica[2] == 3) fill(50,205,50);
-        else fill(255,140,0);
-        rect(ciglica[0], ciglica[1], ciglaSirina, ciglaDuzina);
-    }
-}
-
-void SudaranjeSaCiglicama(Loptica l) {
-    if (l.BrzinaVert < 0){
-        for(int i = ciglice.size() - 1; i >= 0; i-- ){
-            int[] ciglica = ciglice.get(i);
-            // ako se sudari s ciglicom
-            float udarac_x = HorizontalCollide(l.pX - l.Velicina/2, l.pY - l.Velicina/2, l.X - l.Velicina/2, l.Y - l.Velicina/2, ciglica[1] + ciglaDuzina, ciglica[0], ciglica[0] + ciglaSirina);
-            float udarac_x2 = HorizontalCollide(l.pX + l.Velicina/2, l.pY - l.Velicina/2, l.X + l.Velicina/2, l.Y - l.Velicina/2, ciglica[1] + ciglaDuzina, ciglica[0], ciglica[0] + ciglaSirina);
-            if ((!Float.isNaN(udarac_x)) || !(Float.isNaN(udarac_x2))) {
-                //OdbijOdStropa(ciglica[1]);
-                l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
-                l.BrzinaVert *= -1;
-                ciglice.remove(i);
-                break;
-            }
-        }
-    }
-    if (l.BrzinaVert > 0){
-        for(int i = ciglice.size() - 1; i >= 0; i-- ){
-            int[] ciglica = ciglice.get(i);
-            // ako se sudari s ciglicom
-            float udarac_x = HorizontalCollide(l.pX - l.Velicina/2, l.pY + l.Velicina/2, l.X - l.Velicina/2, l.Y + l.Velicina/2, ciglica[1], ciglica[0], ciglica[0] + ciglaSirina);
-            float udarac_x2 = HorizontalCollide(l.pX + l.Velicina/2, l.pY + l.Velicina/2, l.X + l.Velicina/2, l.Y + l.Velicina/2, ciglica[1], ciglica[0], ciglica[0] + ciglaSirina);
-            if ((!Float.isNaN(udarac_x)) || !(Float.isNaN(udarac_x2))) {
-                //OdbijOdStropa(ciglica[1]);
-                l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
-                l.BrzinaVert *= -1;
-                ciglice.remove(i);
-                break;
-            }
-        }
-    }
-    if (l.BrzinaHorizon > 0){
-        for(int i = ciglice.size() - 1; i >= 0; i-- ){
-            int[] ciglica = ciglice.get(i);
-            // ako se sudari s ciglicom
-            float udarac_y = VerticalCollide(l.pX + l.Velicina/2, l.pY - l.Velicina/2, l.X + l.Velicina/2, l.Y - l.Velicina/2, ciglica[0], ciglica[1], ciglica[1] + ciglaDuzina);
-            float udarac_y2 = VerticalCollide(l.pX + l.Velicina/2, l.pY + l.Velicina/2, l.X + l.Velicina/2, l.Y + l.Velicina/2, ciglica[0], ciglica[1], ciglica[1] + ciglaDuzina);
-            if ((!Float.isNaN(udarac_y)) || !(Float.isNaN(udarac_y2))) {
-                //OdbijOdStropa(ciglica[1]);
-                l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
-                l.BrzinaHorizon *= -1;
-                ciglice.remove(i);
-                break;
-            }
-        }
-    }
-    if (l.BrzinaHorizon < 0){
-        for(int i = ciglice.size() - 1; i >= 0; i-- ){
-            int[] ciglica = ciglice.get(i);
-            // ako se sudari s ciglicom
-            float udarac_y = VerticalCollide(l.pX - l.Velicina/2, l.pY - l.Velicina/2, l.X - l.Velicina/2, l.Y - l.Velicina/2, ciglica[0] + ciglaSirina, ciglica[1], ciglica[1] + ciglaDuzina);
-            float udarac_y2 = VerticalCollide(l.pX - l.Velicina/2, l.pY + l.Velicina/2, l.X - l.Velicina/2, l.Y + l.Velicina/2, ciglica[0] + ciglaSirina, ciglica[1], ciglica[1] + ciglaDuzina);
-            if ((!Float.isNaN(udarac_y)) || !(Float.isNaN(udarac_y2))) {
-                //OdbijOdStropa(ciglica[1]);
-                l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
-                l.BrzinaHorizon *= -1;
-                ciglice.remove(i);
-                break;
-            }
-        }
-    }
-}
 
 void IspisiVrijeme(int startVrijeme){
     fill(255,140,0);
