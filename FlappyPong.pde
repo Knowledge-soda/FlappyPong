@@ -25,8 +25,6 @@ int zaslon = 0;
 Loptica loptica1 = new Loptica(100,100);
 Loptica loptica2 = new Loptica(100,500);
 
-//Reket reket;
-
 // početna gravitacija
 float gravitacija = 0.3;
 

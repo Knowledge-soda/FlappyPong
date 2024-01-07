@@ -97,6 +97,55 @@ class Loptica {
     }
 
     void OdbijOdReketa(Reket reket) {
+        if (BrzinaVert < 0) return;
+        float rLijevi = reket.X - reket.Sirina / 2;
+        float rDesni = reket.X + reket.Sirina / 2;
+        float rGornji = reket.Y - reket.Visina / 2;
+        float rpLijevi = reket.X - reket.dX - reket.Sirina / 2;
+        float rpDesni = reket.X - reket.dX + reket.Sirina / 2;
+        float rpGornji = reket.Y - reket.dY - reket.Visina / 2;
+        float pLijevi = pX - Velicina / 2;
+        float pDesni  = pX + Velicina / 2;
+        float pDonji  = pY + Velicina / 2;
+        float Lijevi = X - Velicina / 2;
+        float Desni  = X + Velicina / 2;
+        float Donji  = Y + Velicina / 2;
+        if (Desni < rLijevi || Lijevi > rDesni){
+            return; // loptica izvan x-osi reketa
+        }
+        if (rGornji < Donji && Donji < rpGornji){ // reket je prosao kroz lopticu
+            rGornji = (pDonji + Donji) / 2;
+        }
+        float x1 = HorizontalCollide(
+            pLijevi, pDonji, Lijevi, Donji, rGornji, rLijevi, rDesni);
+        float x2 = HorizontalCollide(
+            pDesni, pDonji, Desni, Donji, rGornji, rLijevi, rDesni);
+        float x3 = HorizontalCollide(
+            pLijevi, pDonji, Lijevi, Donji, rpGornji, rpLijevi, rpDesni);
+        float x4 = HorizontalCollide(
+            pDesni, pDonji, Desni, Donji, rpGornji, rpLijevi, rpDesni);
+        if (Float.isNaN(x1) && Float.isNaN(x2) && Float.isNaN(x3) && Float.isNaN(x4)) return;
+        if (Float.isNaN(x1) && Float.isNaN(x2)){
+            x1 = x3;
+            x2 = x4;
+        }
+        float x = 0;
+        if (Float.isNaN(x1)) x = x2 - Velicina / 2;
+        else x = x1 + Velicina / 2;
+        float Kut = -map(x, rLijevi, rDesni, -PI/12, PI/12);
+
+        float nBrzinaHorizon = BrzinaHorizon * cos(Kut) - BrzinaVert * sin(Kut);
+        float nBrzinaVert = BrzinaHorizon * sin(Kut) - BrzinaVert * cos(Kut);
+        BrzinaVert = nBrzinaVert;
+        BrzinaHorizon = nBrzinaHorizon;
+        if (BrzinaVert > -4){
+            BrzinaVert = -10;
+        }
+        BrzinaVert += reket.dY * 1.5;
+        BrzinaVert -= (BrzinaVert * otporPodlogeVert);
+        // if (BrzinaVert > -1) BrzinaVert = -3;
+        Y = reket.Y - reket.Visina / 2 - Velicina / 2 + BrzinaVert;
+        /*
         // ako se loptica nalazi unutar širine reketa
         if ((X + Velicina/2 > reket.X - reket.Sirina/2) && (X - Velicina/2 < reket.X + reket.Sirina/2)) {
           // ako je udaljenost središta loptice i središta reketa manja od pola veličine loptice i pomaka miša
@@ -112,6 +161,7 @@ class Loptica {
               BrzinaHorizon = (X - reket.X)/10; // 1/10 vrijednosti najprirodnije
           }
         }
+        */
     }
 
     /*

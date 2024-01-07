@@ -45,11 +45,11 @@ class Igra1 {
         background(110,193,248);
 
         loptica.Nacrtaj();
+        reket.Nacrtaj();
         loptica.PrimijeniGravitaciju();
         loptica.ZadrziNaZaslonu();
-        reket.Nacrtaj();
-        loptica.OdbijOdReketa(reket);
         loptica.PrimijeniHorizontalnuBrzinu();
+        loptica.OdbijOdReketa(reket);
 
         DodavanjeZidova();
         for (int i = 0; i < zidovi.size(); i++) {

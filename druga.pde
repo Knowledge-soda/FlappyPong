@@ -98,12 +98,26 @@ class Igra2{
     }
 
     void SudaranjeSaCiglicama(Loptica l) {
+        float pLijevi = l.pX - l.Velicina / 2;
+        float pGornji = l.pY - l.Velicina / 2;
+        float pDesni  = l.pX + l.Velicina / 2;
+        float pDonji  = l.pY + l.Velicina / 2;
+        float Lijevi = l.X - l.Velicina / 2;
+        float Gornji = l.Y - l.Velicina / 2;
+        float Desni  = l.X + l.Velicina / 2;
+        float Donji  = l.Y + l.Velicina / 2;
         if (l.BrzinaVert < 0){
             for(int i = ciglice.size() - 1; i >= 0; i-- ){
                 int[] ciglica = ciglice.get(i);
+                float cLijevi = ciglica[0];
+                float cGornji = ciglica[1];
+                float cDesni  = ciglica[0] + ciglaSirina;
+                float cDonji  = ciglica[1] + ciglaDuzina;
                 // ako se sudari s ciglicom
-                float udarac_x = HorizontalCollide(l.pX - l.Velicina/2, l.pY - l.Velicina/2, l.X - l.Velicina/2, l.Y - l.Velicina/2, ciglica[1] + ciglaDuzina, ciglica[0], ciglica[0] + ciglaSirina);
-                float udarac_x2 = HorizontalCollide(l.pX + l.Velicina/2, l.pY - l.Velicina/2, l.X + l.Velicina/2, l.Y - l.Velicina/2, ciglica[1] + ciglaDuzina, ciglica[0], ciglica[0] + ciglaSirina);
+                float udarac_x = HorizontalCollide(
+                    pLijevi, pGornji, Lijevi, Gornji, cDonji, cLijevi, cDesni);
+                float udarac_x2 = HorizontalCollide(
+                    pDesni, pGornji, Desni, Gornji, cDonji, cLijevi, cDesni);
                 if ((!Float.isNaN(udarac_x)) || !(Float.isNaN(udarac_x2))) {
                     //OdbijOdStropa(ciglica[1]);
                     l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
@@ -116,9 +130,15 @@ class Igra2{
         if (l.BrzinaVert > 0){
             for(int i = ciglice.size() - 1; i >= 0; i-- ){
                 int[] ciglica = ciglice.get(i);
+                float cLijevi = ciglica[0];
+                float cGornji = ciglica[1];
+                float cDesni  = ciglica[0] + ciglaSirina;
+                float cDonji  = ciglica[1] + ciglaDuzina;
                 // ako se sudari s ciglicom
-                float udarac_x = HorizontalCollide(l.pX - l.Velicina/2, l.pY + l.Velicina/2, l.X - l.Velicina/2, l.Y + l.Velicina/2, ciglica[1], ciglica[0], ciglica[0] + ciglaSirina);
-                float udarac_x2 = HorizontalCollide(l.pX + l.Velicina/2, l.pY + l.Velicina/2, l.X + l.Velicina/2, l.Y + l.Velicina/2, ciglica[1], ciglica[0], ciglica[0] + ciglaSirina);
+                float udarac_x = HorizontalCollide(
+                    pLijevi, pDonji, Lijevi, Donji, cGornji, cLijevi, cDesni);
+                float udarac_x2 = HorizontalCollide(
+                    pDesni, pDonji, Desni, Donji, cGornji, cLijevi, cDesni);
                 if ((!Float.isNaN(udarac_x)) || !(Float.isNaN(udarac_x2))) {
                     //OdbijOdStropa(ciglica[1]);
                     l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
@@ -129,11 +149,18 @@ class Igra2{
             }
         }
         if (l.BrzinaHorizon > 0){
+            // loptica ide desno
             for(int i = ciglice.size() - 1; i >= 0; i-- ){
                 int[] ciglica = ciglice.get(i);
+                float cLijevi = ciglica[0];
+                float cGornji = ciglica[1];
+                float cDesni  = ciglica[0] + ciglaSirina;
+                float cDonji  = ciglica[1] + ciglaDuzina;
                 // ako se sudari s ciglicom
-                float udarac_y = VerticalCollide(l.pX + l.Velicina/2, l.pY - l.Velicina/2, l.X + l.Velicina/2, l.Y - l.Velicina/2, ciglica[0], ciglica[1], ciglica[1] + ciglaDuzina);
-                float udarac_y2 = VerticalCollide(l.pX + l.Velicina/2, l.pY + l.Velicina/2, l.X + l.Velicina/2, l.Y + l.Velicina/2, ciglica[0], ciglica[1], ciglica[1] + ciglaDuzina);
+                float udarac_y = VerticalCollide(
+                    pDesni, pGornji, Desni, Gornji, cLijevi, cGornji, cDonji);
+                float udarac_y2 = VerticalCollide(
+                    pDesni, pDonji, Desni, Donji, cLijevi, cGornji, cDonji);
                 if ((!Float.isNaN(udarac_y)) || !(Float.isNaN(udarac_y2))) {
                     //OdbijOdStropa(ciglica[1]);
                     l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
@@ -146,9 +173,15 @@ class Igra2{
         if (l.BrzinaHorizon < 0){
             for(int i = ciglice.size() - 1; i >= 0; i-- ){
                 int[] ciglica = ciglice.get(i);
+                float cLijevi = ciglica[0];
+                float cGornji = ciglica[1];
+                float cDesni  = ciglica[0] + ciglaSirina;
+                float cDonji  = ciglica[1] + ciglaDuzina;
                 // ako se sudari s ciglicom
-                float udarac_y = VerticalCollide(l.pX - l.Velicina/2, l.pY - l.Velicina/2, l.X - l.Velicina/2, l.Y - l.Velicina/2, ciglica[0] + ciglaSirina, ciglica[1], ciglica[1] + ciglaDuzina);
-                float udarac_y2 = VerticalCollide(l.pX - l.Velicina/2, l.pY + l.Velicina/2, l.X - l.Velicina/2, l.Y + l.Velicina/2, ciglica[0] + ciglaSirina, ciglica[1], ciglica[1] + ciglaDuzina);
+                float udarac_y = VerticalCollide(
+                    pLijevi, pGornji, Lijevi, Gornji, cDesni, cGornji, cDonji);
+                float udarac_y2 = VerticalCollide(
+                    pLijevi, pDonji, Lijevi, Donji, cDesni, cGornji, cDonji);
                 if ((!Float.isNaN(udarac_y)) || !(Float.isNaN(udarac_y2))) {
                     //OdbijOdStropa(ciglica[1]);
                     l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
