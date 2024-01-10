@@ -5,8 +5,9 @@ class Igra1 {
     ArrayList<int[]> zidovi;
     float zadnjeVrijemeDodavanja = 0;
 
-    int zivot = 100;
+    float zivot = 100;
     int rezultat = 0;
+    int startVrijeme;
 
     //***KONSTANTE***
     //zidovi info
@@ -17,8 +18,8 @@ class Igra1 {
     int sirinaZida = 80;
     color bojaZidova = color(0,128,0);
 
-    // zivot i rezultat info
-    int maxZivot = 100;
+    // zivot info
+    float maxZivot = 100;
     int sirinaLinijeZivota = 60;
 
     Igra1(){
@@ -28,8 +29,9 @@ class Igra1 {
         loptica = new Loptica(100, 300);
         zidovi = new ArrayList<int[]>();
         zadnjeVrijemeDodavanja = 0;
-        zivot = 100;
+        zivot = maxZivot;
         rezultat = 0;
+        startVrijeme = millis();
     }
 
     void Igraj(){
@@ -58,8 +60,9 @@ class Igra1 {
             CrtajZid(i);
             SudaranjeSaZidom(i,loptica);
         }
+        SmanjiZivot(loptica, -0.03);
         IscrtajLinijuZivota(loptica);
-        ispisiRezultat();
+        ispisiRezultat(rezultat);
 
         /*
         // inicijaliziraj varijable na pocetno
@@ -126,7 +129,7 @@ class Igra1 {
             (l.Y - l.Velicina/2 < gornjiZidY + gornjiZidVisina)) {
             fill(color(255,0,0));
             rect(gornjiZidX, gornjiZidY, sirinaZida, gornjiZidVisina, 7);
-            SmanjiZivot(l);
+            SmanjiZivot(l, 1);
             zid[4] = 1; // dogodio se sudar s tim zidom
         }
         // ako se sudari s donjim zidom
@@ -136,15 +139,57 @@ class Igra1 {
             (l.Y - l.Velicina/2 < donjiZidY + donjiZidVisina)){
             fill(color(255,0,0));
             rect(donjiZidX, donjiZidY, sirinaZida, donjiZidVisina, 7);
-            SmanjiZivot(l);
+            SmanjiZivot(l, 1);
             zid[4]=1; // dogodio se sudar s tim zidom
           }
 
+        /* Ovo je kod koji je pokusavao brojati koliko zidova smo prosli
+         * vise se ne koristi jer nije tocan, a jednostavnije je brojati
+         * sekunde
         if (l.X > (zid[0] + sirinaZida) && sudar == 0) {
             // samo jedanput brojimo jedan zid
             sudar = 1;
             zid[4] = 1;
             rezultat++; //ovaj if se izvrši i kada nemamo sudar
         }
+        */
+        rezultat = (millis()-startVrijeme)/100;
+    }
+
+    void SmanjiZivot(Loptica l, float n){
+        zivot -= n;
+        if (zivot >= maxZivot) zivot = maxZivot;
+        if (zivot <= 0 || keyNext){
+            // kraj igre 1, prijedi na igru 2
+            igra2 = new Igra2(2);
+            keyNext = false;
+        }
+    }
+
+    void IscrtajLinijuZivota(Loptica l) {
+        noStroke();
+        fill(236, 240, 241);
+        rectMode(CORNER);
+        rect(l.X- sirinaLinijeZivota/2, l.Y - 30, sirinaLinijeZivota, 5);
+        if (zivot > 60) {
+            fill(57,255,20);
+        }
+        else if (zivot > 30) {
+            fill(230, 126, 34);
+        }
+        else {
+            fill(255, 0, 0);
+        }
+        rectMode(CORNER);
+        rect(l.X-sirinaLinijeZivota/2, l.Y - 30, sirinaLinijeZivota * zivot/maxZivot, 5);
+    }
+
+
+    void LopticaNaPodu(Loptica l){ // Poziva se svaki put kad je loptica na podu
+        SmanjiZivot(l, 10);
+        l.BrzinaVert = -12;
+    }
+
+    void LopticaUdarilaReket(Loptica l){ // Poziva se svaki put kad loptica udari reket
     }
 }

@@ -17,7 +17,7 @@ import com.jogamp.newt.opengl.GLWindow;
 // 2: Kraj igrice
 // 3: Zaslon s instrukcijama
 // 4: Zaslon za igricu po uzoru na Brick Breaker
-// 5: Zaslon za igricu po uzoru na Brick Breaker sa dvije kuglice
+// 5: Zaslon za igricu po uzoru na Brick Breaker sa vertikalno staticnim reketom
 
 int zaslon = 0;
 
@@ -33,21 +33,10 @@ float otporZraka = 0.00001;
 float otporPodlogeVert = 0.35;
 float otporPodlogeHoriz = 0.3;
 
-// zivot i rezultat info
-int maxZivot = 100;
-int zivot = 100;
-int sirinaLinijeZivota = 60;
-int rezultat = 0;
-
-// inicijalizacija niza ciglica, sirina i duzina jedne ciglice
-ArrayList<int[]> ciglice = new ArrayList<int[]>();
-int ciglaSirina = 50, ciglaDuzina = 20;
-
-// samo jednom određujemo boje ciglica
-int odrediCiglice = 1;
-int odrediCiglice2 = 1;
+boolean keyNext = false;
 
 // vrijeme početka i kraja igre 2 i 3
+// NE RADI od refaktoriranja koda
 int startVrijeme, krajVrijeme, startVrijeme2, krajVrijeme2;
 float ukupnoVrijemeSec, ukupnoVrijemeSec2;
 int meduvrijemePocetak;
@@ -65,7 +54,6 @@ String korisnikIme = "", upisano = "";
 //zvukovi
 AudioPlayer pjesmica, loptica_zvuk, podogak_zvuk;
 Minim minim;
-boolean playable = true;
 
 //font
 PFont font;
@@ -165,10 +153,11 @@ void ZaslonKrajIgre() {
     textSize(40);
     text("Igra je gotova", height/2, width/3 - 20);
 
-    ispisiRezultat();
+    int rezultat = igra1.rezultat + igra2.rezultat + igra3.rezultat;
+    ispisiRezultat(rezultat);
 
     if(PrintTop5 == 1){
-        PronadiTop5();
+        PronadiTop5(rezultat);
         PrintTop5 = 0;
     }
 
@@ -212,11 +201,11 @@ void ZaslonInstrukcije(){
     fill(255,0,0);
     text("Cilj igre 2:", height/2, 300);
     fill(77,0,75);
-    text("Pogodi sve ciglice u što manjem vremenu!", height/2, 320);
+    text("Pogodi sve ciglice u što manjem vremenu i sa što manje padanja!", height/2, 320);
     fill(255,0,0);
     text("Cilj igre 3:", height/2, 360);
     fill(77,0,75);
-    text("Uz pomocu 2 loptice pogodi sve ciglice u što manjem vremenu!", height/2, 380);
+    text("Isto kao igra 2, samo se reket ne miče vertikalno!", height/2, 380);
     fill(255,0,0);
     text("Reket i loptica:", height/2, 420);
     fill(77,0,75);
@@ -247,7 +236,6 @@ public void mousePressed() {
             loptica_zvuk.rewind();
         }
 
-        rezultat = 0;
         igra1 = new Igra1();
    }
 }
@@ -257,16 +245,15 @@ void keyPressed() {
         looping=false;
         noLoop();
     }
-
     else if( key == 'x' && (zaslon == 1 || zaslon == 4 || zaslon == 5)){
-        loptica1=new Loptica(100,300);
-        zaslon = 0;
+        igra1 = new Igra1();
     }
 
     else if( key == 'p' && looping == false && zaslon == 1){
         looping = true;
         loop();
     }
+
     // ako stisnemo pauzu u 2. ili 3. igri moramo ignorirati vrijeme koje prođe dok traje pauza
     else if( key == 's' && (zaslon == 4 || zaslon == 5)){
         looping=false;
@@ -283,6 +270,9 @@ void keyPressed() {
     else if( key == 'i' && zaslon == 0){
         zaslon = 3;
     }
+    else if (key == 'n'){
+      keyNext = true;
+    }
     else if (key == ENTER ) {
         korisnikIme = upisano;
         upisano = "";
@@ -292,7 +282,34 @@ void keyPressed() {
     }
 }
 
+/**** EVENT HANDLERS ****
+ * Pozivaju se svaki put kad se nesto dogodi
+ * za sto je potrebna razlicita reakcija ovisno
+ * o igri. */
 
+void LopticaNaPodu(Loptica l){ // Poziva se svaki put kad je loptica na podu
+    if (zaslon == 1) {
+        igra1.LopticaNaPodu(l);
+    }
+    else if(zaslon == 4){
+        igra2.LopticaNaPodu(l);
+    }
+    else if(zaslon == 5){
+        igra3.LopticaNaPodu(l);
+    }
+}
+
+void LopticaUdarilaReket(Loptica l){ // Poziva se svaki put kad je loptica udari reket
+    if (zaslon == 1) {
+        igra1.LopticaUdarilaReket(l);
+    }
+    else if(zaslon == 4){
+        igra2.LopticaUdarilaReket(l);
+    }
+    else if(zaslon == 5){
+        igra3.LopticaUdarilaReket(l);
+    }
+}
 /********* FUNKCIJE 1. IGRE *********/
 
 void NacrtajPticicu() {
@@ -303,38 +320,11 @@ void NacrtajPticicu() {
 }
 
 
-void ispisiRezultat(){
+void ispisiRezultat(int num){
     fill(255,140,0);
     textSize(50);
     textAlign(CENTER);
-    text(rezultat, height/2 , 50);
-}
-
-void IscrtajLinijuZivota(Loptica l) {
-    noStroke();
-    fill(236, 240, 241);
-    rectMode(CORNER);
-    rect(l.X- sirinaLinijeZivota/2, l.Y - 30, sirinaLinijeZivota, 5);
-    if (zivot > 60) {
-        fill(57,255,20);
-    }
-    else if (zivot > 30) {
-        fill(230, 126, 34);
-    }
-    else {
-        fill(255, 0, 0);
-    }
-    rectMode(CORNER);
-    rect(l.X-sirinaLinijeZivota/2, l.Y - 30, sirinaLinijeZivota * zivot/maxZivot, 5);
-}
-
-void SmanjiZivot(Loptica l){
-    zivot -= 1;
-    if (zivot <= 0){
-        // kraj igre 1, prijedi na igru 2
-        //****************
-        igra2 = new Igra2(2);
-    }
+    text(num, height/2 , 50);
 }
 
 /********* FUNKCIJE 2. IGRE *********/
@@ -347,7 +337,7 @@ void IspisiVrijeme(int startVrijeme){
 }
 
 /********* FUNKCIJE ZA ISPIS NA KRAJU *********/
-void PronadiTop5(){
+void PronadiTop5(int rezultat){
     String[] top5 = loadStrings("top5.txt");
     // zapisemo rezultate i imena iz txt u 2 odvojena niza
     for(int i = 0; i < 5; i++){

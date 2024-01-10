@@ -5,12 +5,15 @@ class Igra2{
     ArrayList<int[]> ciglice;
     int tip;
 
+    int rezultat, pomocniRezultat;
+
     //***KONSTANTE***
     int ciglaSirina = 50, ciglaDuzina = 20;
 
     Igra2(int tip){
         this.tip = tip; // tip = 2 za drugu igru, 3 za trecu
         loptica1 = new Loptica(100, 400);
+        loptica1.BrzinaVert = -5;
         if (tip == 2){
             zaslon = 4;
             reket = new Reket(50, 500);
@@ -18,11 +21,14 @@ class Igra2{
         if (tip == 3){
             zaslon = 5;
             reket = new Reket(50, height - 20);
-            loptica2 = new Loptica(100, 400);
+            // loptica2 = new Loptica(150, 400);
+            // loptica2.BrzinaVert = -5;
         }
         ciglice = new ArrayList<int[]>();
         OdrediCiglice();
         startVrijeme = millis();
+        rezultat = 0;
+        pomocniRezultat = 0; // broji samo ciglice i padove
     }
     void Igraj(){
         float dx = mouseX - width / 2;
@@ -35,37 +41,42 @@ class Igra2{
         r.warpPointer(width / 2, height / 2);
 
         background(255);
-        IspisiVrijeme(startVrijeme);
         NacrtajCiglice();
         loptica1.Nacrtaj();
+        /* druga loptica je umjesto pomoci postala hendikep
         if (tip == 3)
             loptica2.Nacrtaj();
+        */
         reket.Nacrtaj();
         loptica1.PrimijeniGravitaciju();
         loptica1.ZadrziNaZaslonu();
         loptica1.OdbijOdReketa(reket);
         loptica1.PrimijeniHorizontalnuBrzinu();
         SudaranjeSaCiglicama(loptica1);
-        if (tip == 3){ // samo u trecoj igri postoji druga loptica
+        if (tip == 3){ // u trecoj igri je postojala druga loptica
+            /*
             loptica2.PrimijeniGravitaciju();
             loptica2.ZadrziNaZaslonu();
             loptica2.OdbijOdReketa(reket);
             loptica2.PrimijeniHorizontalnuBrzinu();
             SudaranjeSaCiglicama(loptica2);
+            */
         }
+        rezultat = pomocniRezultat - (millis() - startVrijeme) / 1000;
+        ispisiRezultat(rezultat);
+
         // kraj igre
-        if( ciglice.size() == 0 ){
-            krajVrijeme = millis();
-            ukupnoVrijemeSec = (krajVrijeme - startVrijeme)/1000;
-            // ukupnom rezultatu dodajemo broj obrnuto proporacionalan vremenu potrebnom za pogađanje svih ciglica
-            rezultat += round(150 - 2 * ukupnoVrijemeSec);
-            //****************
+        if( ciglice.size() == 0 || keyNext){
+            rezultat = max(rezultat, 0);
             if (tip == 2){
-                // zaslon = 5;
                 igra3 = new Igra2(3);
             } else {
+                PrintTop5 = 1;
+                trazeni = 5;
+                korisnikIme = "";
                 zaslon = 2;
             }
+            keyNext = false;
         }
     }
 
@@ -123,6 +134,7 @@ class Igra2{
                     l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
                     l.BrzinaVert *= -1;
                     ciglice.remove(i);
+                    pomocniRezultat += 10;
                     break;
                 }
             }
@@ -144,6 +156,7 @@ class Igra2{
                     l.BrzinaVert -= (l.BrzinaVert * otporPodlogeVert);
                     l.BrzinaVert *= -1;
                     ciglice.remove(i);
+                    pomocniRezultat += 10;
                     break;
                 }
             }
@@ -166,6 +179,7 @@ class Igra2{
                     l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
                     l.BrzinaHorizon *= -1;
                     ciglice.remove(i);
+                    pomocniRezultat += 10;
                     break;
                 }
             }
@@ -187,9 +201,22 @@ class Igra2{
                     l.BrzinaHorizon -= (l.BrzinaHorizon * otporPodlogeHoriz);
                     l.BrzinaHorizon *= -1;
                     ciglice.remove(i);
+                    pomocniRezultat += 10;
                     break;
                 }
             }
         }
+    }
+
+    void LopticaNaPodu(Loptica l){ // Poziva se svaki put kad je loptica na podu
+        l.BrzinaVert = -10;
+        pomocniRezultat -= 50;
+    }
+
+    void LopticaUdarilaReket(Loptica l){ // Poziva se svaki put kad loptica udari reket
+        // Ukoliko lupamo reketom lopticom vertikalna brzina bi trebla
+        // konvergirati prema -17.8 tj. savrsenoj brzini (udarac do stropa)
+        // nazalost zbog otpora zraka moramo postaviti na 30
+        l.BrzinaVert -= (30 + l.BrzinaVert) / 3;
     }
 }

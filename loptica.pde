@@ -1,4 +1,6 @@
 float VerticalCollide(float x1, float y1, float x2, float y2, float xl, float ylu, float yld){
+    // odredi sjecište dužine (x1, y1) - (x2, y2) sa dužinom (xl, ylu) - (xl, yld)
+    // mora vrijediti: ylu < yld, funkcija vraća NaN ako nema sjecišta
     if ((x1 < xl && x2 < xl) || (x1 > xl && x2 > xl)) return Float.NaN;
     float y_interp = map(xl, x1, x2, y1, y2);
     if (ylu < y_interp && y_interp < yld) return y_interp;
@@ -6,6 +8,8 @@ float VerticalCollide(float x1, float y1, float x2, float y2, float xl, float yl
 }
 
 float HorizontalCollide(float x1, float y1, float x2, float y2, float yl, float xll, float xlr){
+    // odredi sjecište dužine (x1, y1) - (x2, y2) sa dužinom (xll, yl) - (xlr, yl)
+    // mora vrijediti: xll < ylr, funkcija vraća NaN ako nema sjecišta
     if ((y1 < yl && y2 < yl) || (y1 > yl && y2 > yl)) return Float.NaN;
     float x_interp = map(yl, y1, y2, x1, x2);
     if (xll < x_interp && x_interp < xlr) return x_interp;
@@ -51,6 +55,7 @@ class Loptica {
         Y = podloga - Velicina/2;
         BrzinaVert -= (BrzinaVert * otporPodlogeVert);
         BrzinaVert *= -1;
+        LopticaNaPodu(this);
     }
 
     void OdbijOdStropa(float podloga) {
@@ -98,15 +103,19 @@ class Loptica {
 
     void OdbijOdReketa(Reket reket) {
         if (BrzinaVert < 0) return;
+        // koordinate reketa
         float rLijevi = reket.X - reket.Sirina / 2;
         float rDesni = reket.X + reket.Sirina / 2;
         float rGornji = reket.Y - reket.Visina / 2;
+        // koordinate prošlog frame-a reketa
         float rpLijevi = reket.X - reket.dX - reket.Sirina / 2;
         float rpDesni = reket.X - reket.dX + reket.Sirina / 2;
         float rpGornji = reket.Y - reket.dY - reket.Visina / 2;
+        // koordinate prošlog frame-a loptice
         float pLijevi = pX - Velicina / 2;
         float pDesni  = pX + Velicina / 2;
         float pDonji  = pY + Velicina / 2;
+        // koordinate loptice
         float Lijevi = X - Velicina / 2;
         float Desni  = X + Velicina / 2;
         float Donji  = Y + Velicina / 2;
@@ -133,6 +142,8 @@ class Loptica {
         if (Float.isNaN(x1)) x = x2 - Velicina / 2;
         else x = x1 + Velicina / 2;
         float Kut = -map(x, rLijevi, rDesni, -PI/12, PI/12);
+        // Kut označava dvostruku vrijednost kuta između x osi
+        // i zamišljene tangente na reketu od koje se loptica odbija
 
         float nBrzinaHorizon = BrzinaHorizon * cos(Kut) - BrzinaVert * sin(Kut);
         float nBrzinaVert = BrzinaHorizon * sin(Kut) - BrzinaVert * cos(Kut);
@@ -143,46 +154,10 @@ class Loptica {
         }
         BrzinaVert += reket.dY * 1.5;
         BrzinaVert -= (BrzinaVert * otporPodlogeVert);
-        // if (BrzinaVert > -1) BrzinaVert = -3;
+        // BrzinaVert = -17.8;
         Y = reket.Y - reket.Visina / 2 - Velicina / 2 + BrzinaVert;
-        /*
-        // ako se loptica nalazi unutar širine reketa
-        if ((X + Velicina/2 > reket.X - reket.Sirina/2) && (X - Velicina/2 < reket.X + reket.Sirina/2)) {
-          // ako je udaljenost središta loptice i središta reketa manja od pola veličine loptice i pomaka miša
-          // tj. ako je došlo do sudara loptice i reketa
-          if (dist(X, Y, X, reket.Y) <= Velicina/2 + abs(reket.dY)) {
-              OdbijOdDna(reket.Y);
-              // povećaj brzinu i položaj loptice u odnosu na jačinu udara
-              if (reket.dY < 0) {
-                Y += reket.dY;
-                BrzinaVert += reket.dY;
-              }
-              //ide li loptica lijevo ili desno ovisi o točki reketa na koju je pala
-              BrzinaHorizon = (X - reket.X)/10; // 1/10 vrijednosti najprirodnije
-          }
-        }
-        */
+        LopticaUdarilaReket(this);
     }
-
-    /*
-    void OdbijOdReketa2() {
-        // ako se loptica nalazi unutar širine reketa
-        if ((X + Velicina/2 > reket_x - reketSirina/2) && (X - Velicina/2 < reket_x + reketSirina/2)) {
-          // ako je udaljenost središta loptice i središta reketa manja od pola veličine loptice i pomaka miša
-          // tj. ako je došlo do sudara loptice i reketa
-          if (dist(X, Y, X, height - 50) <= Velicina/2 + abs(reket_dx)) {
-              OdbijOdDna2(height - 20);
-              // povećaj brzinu i položaj loptice u odnosu na jačinu udara
-              if (reket_dx < 0) {
-                X += (X - reket_x)/10;
-                BrzinaVert += reket_dx;
-              }
-              //ide li loptica lijevo ili desno ovisi o točki reketa na koju je pala
-              BrzinaHorizon = reket_dx;// 1/10 vrijednosti najprirodnije
-          }
-        }
-    }
-    */
 
     void OdbijOdDna2(float podloga) {
         // najdonju točku loptice postavi na dno podloge, promijeni smjer brzine (pomonoži s -1)
